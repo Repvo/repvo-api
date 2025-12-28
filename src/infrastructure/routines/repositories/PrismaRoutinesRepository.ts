@@ -25,9 +25,10 @@ export default class PrismaRoutinesRepository implements IRoutineRepository {
    * @returns A promise that resolves when the operation completes.
    * @throws {DatabaseError} When the underlying Prisma call fails.
    */
-  async create(routine: Routine): Promise<void> {
+  async create(routine: Routine): Promise<Routine> {
     try {
-      await prisma.routine.create(this.toPersistence(routine));
+      const result = await prisma.routine.create(this.toPersistence(routine));
+      return this.toDomain(result);
     } catch (error: Error | unknown) {
       throw new DatabaseError("Error creating routine: " + (error as Error).message);
     }
@@ -50,6 +51,15 @@ export default class PrismaRoutinesRepository implements IRoutineRepository {
         ownerId: routine.ownerId.value,
       },
     };
+  }
+
+  /** Map a Prisma routine record to a domain `Routine` entity. */
+  private toDomain(prismaRoutine: any): Routine {
+    return new Routine({
+      id: prismaRoutine.id,
+      name: prismaRoutine.name,
+      ownerId: prismaRoutine.ownerId,
+    })
   }
 
 }
